@@ -3,41 +3,45 @@
 Highrise Bot with Dance Commands, Gold Tipping, Spam Messaging, and Teleportation
 Created for authorized users with comprehensive command system.
 """
-from flask import Flask
 
+from flask import Flask
+from threading import Thread
+import asyncio
+import sys
+import os
+from bot import main  # فرض می‌کنیم در bot.py تابع main وجود داره
+from config import HIGHRISE_BOT_TOKEN, HIGHRISE_ROOM_ID  # فرض کنید در config.py این متغیرها قرار دارن
+
+# تعریف اپلیکیشن Flask
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "ربات روشنه در Koyeb!"
+    return "ربات روشنه در Render!"
 
-if __name__ == "__main__":
+# تابع راه‌اندازی سرور Flask
+def run_flask():
+    # می‌توانید پورت مورد نظر را تغییر دهید؛ اینجا 8080 است.
     app.run(host="0.0.0.0", port=8080)
 
-import asyncio
-import sys
-import os
-from bot import main
-
+# توابع کمکی
 def check_environment():
-    """Check if required environment variables are set"""
-    bot_token = os.getenv("HIGHRISE_BOT_TOKEN")
-    room_id = os.getenv("HIGHRISE_ROOM_ID")
+    """بررسی تنظیمات محیط"""
+    bot_token = os.getenv("HIGHRISE_BOT_TOKEN", HIGHRISE_BOT_TOKEN)
+    room_id = os.getenv("HIGHRISE_ROOM_ID", HIGHRISE_ROOM_ID)
     
     if not bot_token:
         print("❌ ERROR: HIGHRISE_BOT_TOKEN environment variable not set")
-        print("Please set your bot token: export HIGHRISE_BOT_TOKEN='your_token_here'")
         return False
     
     if not room_id:
         print("❌ ERROR: HIGHRISE_ROOM_ID environment variable not set")
-        print("Please set your room ID: export HIGHRISE_ROOM_ID='your_room_id_here'")
         return False
     
     return True
 
 def print_welcome():
-    """Print welcome message and bot features"""
+    """پیام خوشامدگویی و معرفی امکانات"""
     print("=" * 60)
     print("🤖 HIGHRISE BOT - ADVANCED FEATURES")
     print("=" * 60)
@@ -49,28 +53,16 @@ def print_welcome():
     print("  • Group Dances: 'dance all [number]' for everyone")
     print("  • Bot Dances: 'dance bot [number]' with repeat")
     print("  • Stop Commands: 'stop' to halt spam/dance loops")
-    print("")
-    print("👥 Authorized Users:")
-    print("  • @Robot.NM")
-    print("  • @389._.20")
-    print("")
-    print("💃 Special Dances:")
-    print("  • 1 = Relaxed")
-    print("  • 2 = GhostFloat")
-    print("  • 3 = CozyNap")
-    print("  • 4 = TwerkItOut")
-    print("  • 5-100 = Various unique animations")
     print("=" * 60)
 
-def main_entry():
-    """Main entry point"""
+def run_bot():
+    """راه‌اندازی بات Highrise"""
     print_welcome()
-    
     if not check_environment():
         sys.exit(1)
-    
     try:
         print("🔄 Initializing bot...")
+        # این قسمت تابع main بات رو اجرا می‌کنه (با asyncio)
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\n⏹️ Bot stopped by user")
@@ -78,5 +70,11 @@ def main_entry():
         print(f"\n❌ Bot crashed: {e}")
         sys.exit(1)
 
+# نقطه ورود اصلی
 if __name__ == "__main__":
-    main_entry()
+    # شروع سرور Flask در یک ترد جدا
+    flask_thread = Thread(target=run_flask)
+    flask_thread.start()
+    
+    # اجرای بات Highrise
+    run_bot()
